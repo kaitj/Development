@@ -22,10 +22,10 @@ for subj in $subjids
 do
 
 subj_dir=$work_dir/$subj
-dwi=$subj_dir/dwi/dwi.nii.gz
-bval=$subj_dir/dwi/dwi.bval
-bvec=$subj_dir/dwi/dwi.bvec
-mask=$subj_dir/dwi/dwi_brain_mask.nii.gz
+dwi=$subj_dir/dwi/multiband_topup_eddy/dwi.nii.gz
+bval=$subj_dir/dwi/multiband_topup_eddy/dwi.bval
+bvec=$subj_dir/dwi/multiband_topup_eddy/dwi.bvec
+mask=$subj_dir/dwi/multiband_topup_eddy/dwi_brain_mask.nii.gz
 
 scheme=$out_dir/$subj/Output/dwi.scheme
 bfloat=$out_dir/$subj/Output/dwi.Bfloat
@@ -49,8 +49,14 @@ modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask -outputfile $bdoub
 echo voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
 cat $bdouble | fa | voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
 
-echo track -inputmodel dt -inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -outputfile wmTract
-track -inputmodel dt =inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -ouptutfile wmTract
+# Create WM mask
+echo fslmaths $out_dir/$subj/Output/fa.nii.gz -thr 0.15 -uthr 1.0 $wm_mask
+fslmaths $out_dir/$subj/Output/fa.nii.gz -thr 0.15 -uthr 1.0 $wm_mask    
+
+echo track -inputmodel dt -inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -outputfile $wm_Tract
+track -inputmodel dt =inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -outputfile $wm_Tract
 
 echo vtkstreamlines -colourorient < $wm_tract > $wm_vtk
 vtkstreamlines -colourorient < $wm_tract > $wm_vtk
+
+done #subj
