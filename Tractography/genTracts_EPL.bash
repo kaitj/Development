@@ -21,7 +21,7 @@ out_dir=.
 for subj in $subjids
 do
 
-subj_dir=%work_dir/$subj
+subj_dir=$work_dir/$subj
 dwi=$subj_dir/dwi/dwi.nii.gz
 bval=$subj_dir/dwi/dwi.bval
 bvec=$subj_dir/dwi/dwi.bvec
@@ -29,7 +29,7 @@ mask=$subj_dir/dwi/dwi_brain_mask.nii.gz
 
 scheme=$out_dir/$subj/Output/dwi.scheme
 bfloat=$out_dir/$subj/Output/dwi.Bfloat
-bdouble=%out_dir/$subj/Output/dwi.Bdouble
+bdouble=$out_dir/$subj/Output/dwi.Bdouble
 wm_mask=$out_dir/$subj/Output/wm_mask.nii.gz
 wm_tract=$out_dir/$subj/Output/wmTracts.Bfloat
 wm_vtk=$out_dir/$subj/Output/wmTracts.vtk
