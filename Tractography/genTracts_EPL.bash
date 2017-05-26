@@ -30,33 +30,40 @@ mask=$subj_dir/dwi/multiband_topup_eddy/dwi_brain_mask.nii.gz
 scheme=$out_dir/$subj/Output/dwi.scheme
 bfloat=$out_dir/$subj/Output/dwi.Bfloat
 bdouble=$out_dir/$subj/Output/dwi.Bdouble
+fa=$out_dir/$subj/Output/fa.nii.gz
 wm_mask=$out_dir/$subj/Output/wm_mask.nii.gz
+wm_tract_unproc=$out_dir/$subj/Output/wmTracts_unproc.Bfloat
 wm_tract=$out_dir/$subj/Output/wmTracts.Bfloat
 wm_vtk=$out_dir/$subj/Output/wmTracts.vtk
 
 # Create scheme file 
-echo fsl2scheme -bvecs $bvec -bvals $bval -bscale 1 -outputfile $scheme
-fsl2scheme -bvecs $bvec -bvals $bval -bscale 1 -outputfile $scheme
+echo fsl2scheme -bvecs $bvec -bvals $bval > $scheme
+fsl2scheme -bvecs $bvec -bvals $bval > $scheme
 
 # Convert data
 echo image2voxel -4dimage $dwi -outputfile $bfloat
 image2voxel =4dimage $dwi -outputfile $bfloat
 
 # Fit tensor
-echo modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask -outputfile $bdouble
-modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask -outputfile $bdouble
+echo modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask > $bdouble 
+modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask > $bdouble
 
-echo voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
-cat $bdouble | fa | voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
+echo voxel2image -outputroot $fa -header $dwi
+cat $bdouble | fa | voxel2image -outputroot $fa -header $dwi
 
 # Create WM mask
-echo fslmaths $out_dir/$subj/Output/fa.nii.gz -thr 0.15 -uthr 1.0 $wm_mask
-fslmaths $out_dir/$subj/Output/fa.nii.gz -thr 0.15 -uthr 1.0 $wm_mask    
+echo fslmaths $fa -thr 0.15 -uthr 1.0 -bin $wm_mask
+fslmaths $fa -thr 0.15 -uthr 1.0 -bin $wm_mask    
 
-echo track -inputmodel dt -inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -outputfile $wm_Tract
-track -inputmodel dt =inputfile $bfloat -schemefile $scheme -seedfile $wm_mask -anisthresh 0.15 -curvethresh 70 -outputfile $wm_Tract
+echo track -inputmodel dt -interpolator nn -header $fa -anisfile $fa -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
+track -inputmodel dt -interpolator nn -header $fa -anisfile $fa -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
 
-echo vtkstreamlines -colourorient < $wm_tract > $wm_vtk
-vtkstreamlines -colourorient < $wm_tract > $wm_vtk
+echo procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
+procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
+
+echo vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
+cat $wm_tract vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
+
+rm -f $wm_tract_unproc
 
 done #subj
