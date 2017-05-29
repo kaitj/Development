@@ -64,7 +64,7 @@ echo procstreamlines -mintractlength 60 -header $fa_thr < $wm_tract_unproc > $wm
 procstreamlines -mintractlength 60 -header $fa_thr < $wm_tract_unproc > $wm_tract
 
 echo vtkstreamlines -scalarfile $fa_thr -interpolate > $wm_vtk
-cat $wm_tract vtkstreamlines -scalarfile $fa_thr -interpolate > $wm_vtk
+cat $wm_tract | vtkstreamlines -scalarfile $fa_thr -interpolate > $wm_vtk
 
 rm -f $wm_tract_unproc
 
