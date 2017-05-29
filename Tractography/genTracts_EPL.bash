@@ -31,6 +31,7 @@ scheme=$out_dir/$subj/Output/dwi.scheme
 bfloat=$out_dir/$subj/Output/dwi.Bfloat
 bdouble=$out_dir/$subj/Output/dwi.Bdouble
 fa=$out_dir/$subj/Output/fa.nii.gz
+fa_thr=$out_dir/$subj/Output/fa_thr.nii.gz
 wm_mask=$out_dir/$subj/Output/wm_mask.nii.gz
 wm_tract_unproc=$out_dir/$subj/Output/wmTracts_unproc.Bfloat
 wm_tract=$out_dir/$subj/Output/wmTracts.Bfloat
@@ -54,15 +55,16 @@ cat $bdouble | fa | voxel2image -outputroot $fa -header $dwi
 # Create WM mask
 echo fslmaths $fa -thr 0.15 -uthr 1.0 -bin $wm_mask
 fslmaths $fa -thr 0.15 -uthr 1.0 -bin $wm_mask    
+fslmaths $fa -thr 0.15 -uthr 1.0 -bin $fa_thr
 
-echo track -inputmodel dt -interpolator nn -header $fa -anisfile $fa -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
-track -inputmodel dt -interpolator nn -header $fa -anisfile $fa -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
+echo track -inputmodel dt -interpolator nn -header $fa_thr -anisfile $fa_thr -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
+track -inputmodel dt -interpolator nn -header $fa_thr -anisfile $fa_thr -anisthresh 0.15 -seedfile -$wm_mask -brainmask $mask < $bdouble > $wm_tract_unproc
 
-echo procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
-procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
+echo procstreamlines -mintractlength 60 -header $fa_thr < $wm_tract_unproc > $wm_tract
+procstreamlines -mintractlength 60 -header $fa_thr < $wm_tract_unproc > $wm_tract
 
-echo vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
-cat $wm_tract vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
+echo vtkstreamlines -scalarfile $fa_thr -interpolate > $wm_vtk
+cat $wm_tract vtkstreamlines -scalarfile $fa_thr -interpolate > $wm_vtk
 
 rm -f $wm_tract_unproc
 
