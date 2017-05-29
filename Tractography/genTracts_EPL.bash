@@ -13,7 +13,7 @@ else
  subjids=$1
 fi 
 
-CAMINO_HEAP_SIZE=16000
+export CAMINO_HEAP_SIZE=16000
 
 work_dir=~/EpilepsyDatabase/EPL14B
 out_dir=.
@@ -43,7 +43,7 @@ fsl2scheme -bvecs $bvec -bvals $bval > $scheme
 
 # Convert data
 echo image2voxel -4dimage $dwi -outputfile $bfloat
-image2voxel =4dimage $dwi -outputfile $bfloat
+image2voxel -4dimage $dwi -outputfile $bfloat
 
 # Fit tensor
 echo modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask > $bdouble 
