@@ -15,26 +15,30 @@ fi
 
 export CAMINO_HEAP_SIZE=16000
 
-work_dir=~/EpilepsyDatabase/EPL14B
-out_dir=.
+work_dir=.
 
 for subj in $subjids
 do
 
 subj_dir=$work_dir/$subj
+out_dir=$subj_dir/Output
+
 dwi=$subj_dir/dwi/multiband_topup_eddy/dwi.nii.gz
 bval=$subj_dir/dwi/multiband_topup_eddy/dwi.bval
 bvec=$subj_dir/dwi/multiband_topup_eddy/dwi.bvec
 mask=$subj_dir/dwi/multiband_topup_eddy/dwi_brain_mask.nii.gz
 
-scheme=$out_dir/$subj/Output/dwi.scheme
-bfloat=$out_dir/$subj/Output/dwi.Bfloat
-bdouble=$out_dir/$subj/Output/dwi.Bdouble
-fa=$out_dir/$subj/Output/fa.nii.gz
-wm_mask=$out_dir/$subj/Output/wm_mask.nii.gz
-wm_tract_unproc=$out_dir/$subj/Output/wmTracts_unproc.Bfloat
-wm_tract=$out_dir/$subj/Output/wmTracts.Bfloat
-wm_vtk=$out_dir/$subj/Output/wmTracts.vtk
+scheme=$out_dir/dwi.scheme
+bfloat=$out_dir/dwi.Bfloat
+bdouble=$out_dir/dwi.Bdouble
+fa=$out_dir/fa.nii.gz
+wm_mask=$out_dir/wm_mask.nii.gz
+wm_tract_unproc=$out_dir/wmTracts_unproc.Bfloat
+wm_tract=$out_dir/wmTracts.Bfloat
+wm_vtk=$out_dir/wmTracts.vtk
+
+faDouble=$out_dir/fa.Bdouble
+fatxt=$out_dir/fa.txt
 
 # Create scheme file 
 echo fsl2scheme -bvecs $bvec -bvals $bval > $scheme
@@ -48,8 +52,8 @@ image2voxel -4dimage $dwi -outputfile $bfloat
 echo modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask > $bdouble 
 modelfit -inputfile $bfloat -schemefile $scheme -bgmask $mask > $bdouble
 
-echo voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
-cat $bdouble | fa | voxel2image -outputroot $out_dir/$subj/Output/fa -header $dwi
+echo voxel2image -outputroot $out_dir/$subj/fa -header $dwi
+cat $bdouble | fa | voxel2image -outputroot $out_dir/fa -header $dwi
 
 # Create WM mask
 echo fslmaths $fa -thr 0.15 -uthr 1.0 -bin $wm_mask
@@ -61,9 +65,9 @@ track -inputmodel dt -interpolator nn -header $fa -anisfile $fa -anisthresh 0.15
 echo procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
 procstreamlines -mintractlength 60 -header $fa < $wm_tract_unproc > $wm_tract
 
+# Create VTK polydata streamlines 
 echo vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
 cat $wm_tract | vtkstreamlines -scalarfile $fa -interpolate > $wm_vtk
-
 rm -f $wm_tract_unproc
 
 done #subj
