@@ -1,0 +1,46 @@
+#/bin/bash
+
+if [ "$#" -lt 3 ]
+then
+ echo ""
+ echo "Usage $0 <subjid/list> <camino tractography> <scalar map>"
+ echo "" 
+ echo "NOTES:"
+ echo " - tractography: Only requires name of file" 
+ echo " - scalar map: Include location of map" 
+ echo "" 
+ exit 0
+fi 
+
+if [ -f $1 ] 
+then 
+ subjids=`cat $1`
+else
+ subjids=$1
+fi 
+
+shift 1
+
+export CAMINO_HEAP_SIZE=16000
+
+work_dir=.
+
+for subj in $subjids
+do 
+
+subj_dir=$work_dir/$subj
+out_dir=$subj_dir/Output
+
+tract=$out_dir/$1
+scalar=$2
+name=${scalar##*/}
+name=${name%%.*}
+scalarDouble=$out_dir/$name.Bdouble
+scalarTxt=$out_dir/$name.txt
+
+echo tractstats -tractstat none -interpolate -scalarfile $scalar > $scalarTxt
+cat $tract | tractstats -tractstat none -interpolate -scalarfile $scalar > $scalarDouble
+cat $scalarDouble | double2txt > $scalarTxt
+rm -f $scalarDouble
+
+done #subj
