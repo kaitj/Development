@@ -4,20 +4,20 @@ if [ "$#" -lt 3 ]
 then
  echo ""
  echo "Usage $0 <subjid/list> <camino tractography> <scalar map>"
- echo "" 
+ echo ""
  echo "NOTES:"
- echo " - tractography: Only requires name of file" 
- echo " - scalar map: Include location of map" 
- echo "" 
+ echo " - tractography: .bfloat file of tractography fibers"
+ echo " - scalar map: type of quantitative scalar"
+ echo ""
  exit 0
-fi 
+fi
 
-if [ -f $1 ] 
-then 
+if [ -f $1 ]
+then
  subjids=`cat $1`
 else
  subjids=$1
-fi 
+fi
 
 shift 1
 
@@ -26,10 +26,10 @@ export CAMINO_HEAP_SIZE=16000
 work_dir=.
 
 for subj in $subjids
-do 
+do
 
 subj_dir=$work_dir/$subj
-out_dir=$subj_dir/Output
+out_dir=$subj_dir/
 
 tract=$out_dir/$1
 scalar=$2
