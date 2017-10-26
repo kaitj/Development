@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ "$#" -lt 2 ]
+then
+ echo "Usage $0 <subjid/list> <in_dir>"
+ exit 0
+fi 
+
+if [ -f $1 ]
+then
+ subjids=`cat $1`
+else
+ subjids=$1
+fi 
+
+for subj in $subjids
+do
+
+subj_dir=$2/$subj
+out_dir=$subj_dir
+
+t1=$subj_dir/t1.nii.gz
+t1brain=$out_dir/t1.brain.nii.gz
+
+# Performs skull-stripping and outputs mesh
+betopts="-f 0.4 -B"
+
+echo bet $t1 $t1brain $betopts
+bet $t1 $bet_t1 $betopts
+
+done #subj 
+
+# Perform manual mesh conversion via Slicer/ITK-Snap

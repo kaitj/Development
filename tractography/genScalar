@@ -31,8 +31,8 @@ do
 subj_dir=$work_dir/$subj
 out_dir=$subj_dir/
 
-tract=$out_dir/$1
-scalar=$2
+tract=$subj_dir/$1
+scalar=$subj_dir/$2
 name=${scalar##*/}
 name=${name%%.*}
 scalarDouble=$out_dir/$name.Bdouble
