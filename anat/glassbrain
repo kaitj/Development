@@ -19,14 +19,14 @@ do
 subj_dir=$2/$subj
 out_dir=$subj_dir
 
-t1=$subj_dir/t1.nii.gz
-t1brain=$out_dir/t1.brain.nii.gz
+t1=$subj_dir/T1/t1.nii.gz
+t1brain=$out_dir/T1/t1.brain.nii.gz
 
 # Performs skull-stripping and outputs mesh
 betopts="-f 0.4 -B"
 
 echo bet $t1 $t1brain $betopts
-bet $t1 $bet_t1 $betopts
+bet $t1 $t1brain $betopts
 
 done #subj 
 

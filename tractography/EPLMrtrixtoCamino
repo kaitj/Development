@@ -21,15 +21,15 @@ out_dir=$3/$subj
 
 mkdir -p $out_dir
 
-tck=$subj_dir/dwi/mrtrix3/tractography/SingleShell_CSDTracking/CSDProb_WholeBrainTracks_in_FODTemplateSpace.tck
-vtk=$out_dir/wholebrain.vtk
-bfloat=$out_dir/wholebrain.bfloat
+tck=$subj_dir/dwi/mrtrix3/tractography/SingleShell_CSDTracking/moreCSDProb_WholeBrainTracks_in_FODTemplateSpace.tck
+vtk=$out_dir/wholebrain_500000.vtk
+bfloat=$out_dir/wholebrain_500000.bfloat
 
 runMatlabCmd convertTractsMRTrixToVTK "'$tck'" "$vtk"
 
 runMatlabCmd convertTractsMRTrixToCamino "'$tck'" "$bfloat"
 
-echo cp $tck $out_dir/wholebrain.tck
-cp $tck $out_dir/wholebrain.tck
+echo cp $tck $out_dir/wholebrain_500000.tck
+cp $tck $out_dir/wholebrain_500000.tck
 
 done #subj 
