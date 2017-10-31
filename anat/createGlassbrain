@@ -1,0 +1,107 @@
+#!/usr/bin/env python
+""" createGlassbrain
+
+Python command line interface for generation of glassbrain model from nifti image.
+Image should be skull stripped
+
+"""
+
+def get_parser():
+    """
+    Argument Parser
+    """
+    from argparse import ArgumentParser, RawTextHelpFormatter
+
+    parser = ArgumentParser(description='Creation of VTK model from nifti image',
+                                            formatter_class=RawTextHelpFormatter)
+
+    # Version option
+    parser.add_argument('--version', action='version', version='1.0.0')
+
+    # Required arguments
+    g_req = parser.add_argument_group('required arguments')
+    g_req.add_argument('--indir', action='store', required=True,
+                                        help='directory with input data')
+    g_req.add_argument('--outdir', action='store', required=True,
+                                        help='directory where output files should be retained')
+    g_req.add_argument('--subjid', action='store', required=True,
+                                        help='subject ID to process')
+    g_req.add_argument('--file', action='store', required=True,
+                                        help='nifti file name ot be processed')
+
+    return parser
+
+def main():
+    """
+    Entry point of code
+    """
+    import nibabel as nib
+    import vtk
+    import os
+
+    # Run parser
+    opts = get_parser().parse_args()
+
+    # Directories
+    indir = os.path.abspath(os.path.join(opts.indir + '/' + opts.subjid))
+    outdir = os.path.abspath(os.path.join(opts.outdir + '/' + opts.subjid))
+
+    nii = os.path.join(indir + '/' + opts.file)
+
+    # Read image
+    reader = vtk.vtkNIFTIImageReader()
+    reader.SetFileName(nii)
+    reader.Update()
+
+    nib_image = nib.nifti1.load(nii)
+
+    # Flip z-axis
+    flipper = vtk.vtkImageFlip()
+    flipper.SetFilteredAxis(2)
+    flipper.SetInputConnection(reader.GetOutputPort())
+    flipper.Update()
+
+    vtk_image = flipper.GetOutput()
+
+    # Marching cubes
+    dmc = vtk.vtkDiscreteMarchingCubes()
+    dmc.SetInputData(vtk_image)
+    dmc.ComputeNormalsOn()
+    dmc.ComputeGradientsOn()
+    dmc.Update()
+
+    # Nifti-RAS transform
+    pdcf = vtk.vtkPolyDataConnectivityFilter()
+    pdcf.SetInputConnection(dmc.GetOutputPort())
+    pdcf.SetExtractionModeToAllRegions()
+    pdcf.Update()
+
+    transform = vtk.vtkTransform()
+    mat = nib_image.affine
+    mat[0][0] = mat[0][0]/2.0
+    mat[1][1] = mat[1][1]/2.0
+    mat[2][2] = mat[2][2]/2.0
+    transform.SetMatrix(mat.ravel())
+
+    transformFilter = vtk.vtkTransformPolyDataFilter()
+    transformFilter.SetTransform(transform)
+    transformFilter.SetInputConnection(pdcf.GetOutputPort())
+    transformFilter.Update()
+
+    # Smooth vtk
+    smoother = vtk.vtkWindowedSincPolyDataFilter()
+    smoother.SetNumberOfIterations(10)
+    smoother.SetInputConnection(transformFilter.GetOutputPort())
+    smoother.Update()
+
+    # Write vtk
+    vtk_name = os.path.join(outdir + '/' + opts.file.split('.', -1)[-3] + '.vtk')
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetFileTypeToBinary()
+    writer.SetFileName(vtk_name)
+    writer.SetInputConnection(smoother.GetOutputPort())
+    writer.Write()
+
+
+if __name__ == '__main__':
+    main()
